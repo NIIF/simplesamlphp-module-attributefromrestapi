@@ -1,0 +1,8 @@
+{
+    "name": "niif/simplesamlphp-module-attributefromrestapi",
+    "description": "Get attribute from any rest api",
+    "type": "simplesamlphp-module",
+    "require": {
+        "simplesamlphp/composer-module-installer": "~1.0"
+    }
+}
