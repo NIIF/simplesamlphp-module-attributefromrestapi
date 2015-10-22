@@ -12,7 +12,7 @@
  *       '60' => array(
  *            'class' => 'attributefromrestapi:AttributeFromRestApi',
  *            'nameId_attribute_name' =>  'subject_nameid', // look at the aa authsource config
- *            'api_url' =>          'https://www.example.com/app.php/api',
+ *            'api_url' =>          'https://www.example.com/resource',
  *       ),
  *
  * @author Gyula Szabó <gyufi@niif.hu>
@@ -39,7 +39,13 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
         assert('is_array($state)');
         $nameId = $state['Attributes'][$this->as_config['nameId_attribute_name']][0];
         $this->config = SimpleSAML_Configuration::getInstance();
-        array_push($state['Attributes'], $this->getAttributes($nameId));
+        $new_attributes = $this->getAttributes($nameId);
+        $state['Attributes'][key($new_attributes)][0] = $new_attributes[key($new_attributes)];
+
+        // array_push($state['Attributes'], $this->getAttributes($nameId));
+
+        // var_dump($this->getAttributes($nameId)); exit;
+        // var_dump($state['Attributes']); exit;
     }
 
     public function getAttributes($nameId, $attributes = array())
@@ -54,13 +60,14 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
         // Setup cURL
         $url = $this->as_config['api_url'].'/'.$nameId;
         $ch = curl_init($url);
-        curl_setopt_array($ch,
+        curl_setopt_array(
+            $ch,
             array(
                 CURLOPT_CUSTOMREQUEST => 'GET',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-                )
-            );
+            )
+        );
 
         // Send the request
         $response = curl_exec($ch);
@@ -71,8 +78,7 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
             SimpleSAML_Logger::error('[afra] API query failed: HTTP response code: '.$http_response.', curl error: "'.curl_error($ch)).'"';
             SimpleSAML_Logger::debug('[afra] API query failed: curl info: '.var_export(curl_getinfo($ch), 1));
             SimpleSAML_Logger::debug('[afra] API query failed: HTTP response: '.var_export($response, 1));
-            $data = array();
-            var_dump($http_response, $response);exit;
+            throw new \Exception("Hiba, ". $response, 1);
         } elseif (false) {
             # egyéb hibaüzenetek
         } else {
