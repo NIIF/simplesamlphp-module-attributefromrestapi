@@ -36,18 +36,23 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
 
     public function process(&$state)
     {
-        assert('is_array($state)');
-        if (! array_key_exists($this->as_config['nameId_attribute_name'], $state['Attributes'])) {
-            throw new SimpleSAML_Error_Exception(
-                "Configuration error: There is no attribute named: "
-                .$this->as_config['nameId_attribute_name']
-                ." in state['Attributes'] array."
-            );
+        try {
+            assert('is_array($state)');
+            if (! array_key_exists($this->as_config['nameId_attribute_name'], $state['Attributes'])) {
+                throw new SimpleSAML_Error_Exception(
+                    "Configuration error: There is no attribute named: '"
+                    .$this->as_config['nameId_attribute_name']
+                    ."'' in \$state['Attributes'] array."
+                );
+            }
+            $nameId = $state['Attributes'][$this->as_config['nameId_attribute_name']][0];
+            $this->config = SimpleSAML_Configuration::getInstance();
+            $new_attributes = $this->getAttributes($nameId);
+            $state['Attributes'][key($new_attributes)][0] = $new_attributes[key($new_attributes)];
+        } catch (\Exception $e) {
+            $this->showException($e);
         }
-        $nameId = $state['Attributes'][$this->as_config['nameId_attribute_name']][0];
-        $this->config = SimpleSAML_Configuration::getInstance();
-        $new_attributes = $this->getAttributes($nameId);
-        $state['Attributes'][key($new_attributes)][0] = $new_attributes[key($new_attributes)];
+
     }
 
     public function getAttributes($nameId, $attributes = array())
@@ -55,9 +60,6 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
 
         // Set up config
         $config = $this->config;
-        $retarray = array();
-
-        // Make the call
 
         // Setup cURL
         $url = $this->as_config['api_url'].'/'.$nameId;
@@ -91,5 +93,14 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
         }
         $attributes = $data['data'];
         return $attributes;
+    }
+
+    private function showException($e)
+    {
+        $globalConfig = SimpleSAML_Configuration::getInstance();
+        $t = new SimpleSAML_XHTML_Template($globalConfig, 'attributefromrestapi:exception.tpl.php');
+        $t->data['e'] = $e->getMessage();
+        $t->show();
+        exit();
     }
 }
