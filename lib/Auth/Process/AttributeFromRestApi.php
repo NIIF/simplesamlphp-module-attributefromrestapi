@@ -37,15 +37,17 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
     public function process(&$state)
     {
         assert('is_array($state)');
+        if (! array_key_exists($this->as_config['nameId_attribute_name'], $state['Attributes'])) {
+            throw new SimpleSAML_Error_Exception(
+                "Configuration error: There is no attribute named: "
+                .$this->as_config['nameId_attribute_name']
+                ." in state['Attributes'] array."
+            );
+        }
         $nameId = $state['Attributes'][$this->as_config['nameId_attribute_name']][0];
         $this->config = SimpleSAML_Configuration::getInstance();
         $new_attributes = $this->getAttributes($nameId);
         $state['Attributes'][key($new_attributes)][0] = $new_attributes[key($new_attributes)];
-
-        // array_push($state['Attributes'], $this->getAttributes($nameId));
-
-        // var_dump($this->getAttributes($nameId)); exit;
-        // var_dump($state['Attributes']); exit;
     }
 
     public function getAttributes($nameId, $attributes = array())
@@ -74,13 +76,13 @@ class sspmod_attributefromrestapi_Auth_Process_AttributeFromRestApi extends Simp
         $http_response = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         // Check for error; not even redirects are allowed here
-        if ($response === false || !($http_response >= 200 && $http_response < 300)) {
+        if ($http_response == 507) {
+            throw new SimpleSAML_Error_Exception("Out of resources: " . $response);
+        } elseif ($response === false || !($http_response >= 200 && $http_response < 300)) {
             SimpleSAML_Logger::error('[afra] API query failed: HTTP response code: '.$http_response.', curl error: "'.curl_error($ch)).'"';
             SimpleSAML_Logger::debug('[afra] API query failed: curl info: '.var_export(curl_getinfo($ch), 1));
             SimpleSAML_Logger::debug('[afra] API query failed: HTTP response: '.var_export($response, 1));
-            throw new \Exception("Hiba, ". $response, 1);
-        } elseif (false) {
-            # egyéb hibaüzenetek
+            throw new SimpleSAML_Error_Exception("Error at REST API response: ". $response . $http_response);
         } else {
             $data = json_decode($response, true);
             SimpleSAML_Logger::info('[afra] got reply from API');
