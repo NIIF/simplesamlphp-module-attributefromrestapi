@@ -17,6 +17,6 @@ The NameID of the request will be in the attribute as defined above.
        '60' => array(
             'class' => 'attributefromrestapi:attributeFromRestApi',
             'nameId_attribute_name' =>  'subject_nameid', // look at the aa authsource config
-            'api_url' =>          'https://www.hexaa.example.com/app.php/api',
+            'api_url' =>          'https://www.anyrestapi.com/getData',
        ),
 ```
