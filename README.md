@@ -17,7 +17,7 @@ _config/config.php_
    authproc.sp = array(
        ...
        '60' => array(
-            'class' => 'attributefromrestapi:attributeFromRestApi',
+            'class' => 'attributefromrestapi:AttributeFromRestApi',
             'nameId_attribute_name' =>  'subject_nameid', // look at the aa authsource config
             'api_url' =>          'https://www.anyrestapi.com/getData',
        ),
